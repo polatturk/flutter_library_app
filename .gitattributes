@@ -1,0 +1,15 @@
+# Tüm platform klasörlerini ve yardımcı dilleri istatistikten çıkar
+android/** linguist-vendored
+ios/** linguist-vendored
+windows/** linguist-vendored
+linux/** linguist-vendored
+macos/** linguist-vendored
+web/** linguist-vendored
+
+# C++, CMake ve diğer sistem dosyalarını tamamen gizle
+*.cpp linguist-vendored
+*.h linguist-vendored
+*.cc linguist-vendored
+*.c linguist-vendored
+*.cmake linguist-vendored
+CMakeLists.txt linguist-vendored

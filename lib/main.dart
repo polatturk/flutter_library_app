@@ -1,14 +1,19 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
-import 'screens/library.page.dart';
-import 'screens/search.page.dart';
-import 'screens/profile.page.dart';
+import 'package:provider/provider.dart'; 
+import 'screens/library_page.dart';
+import 'screens/search_page.dart';
+import 'screens/profile_page.dart';
+import 'providers/theme_provider.dart'; 
 
 void main() {
   runApp(
     DevicePreview(
       enabled: true,
-      builder: (context) => const MyApp(),
+      builder: (context) => ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -18,15 +23,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
-      useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
+      
+      // TEMA AYARLARI
+      themeMode: themeProvider.themeMode, 
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.light,
       ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+      ),
+      
       home: const MainScreen(),
     );
   }
@@ -56,6 +73,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
+          // İkonu isteğin üzerine sade 'book' yaptık
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Kitaplık'),
           NavigationDestination(icon: Icon(Icons.search), label: 'Ara'),
           NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),

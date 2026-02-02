@@ -6,6 +6,7 @@ import 'screens/search_page.dart';
 import 'screens/profile_page.dart';
 import 'providers/theme_provider.dart'; 
 
+
 void main() {
   runApp(
     DevicePreview(

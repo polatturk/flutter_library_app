@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:library_app/models/user_model.dart';
 import '../models/book_model.dart';
 import '../models/category_model.dart';
 import '../models/author_model.dart';
+import '../models/user_model.dart';
 
 
 class ApiService {
@@ -46,7 +48,7 @@ class ApiService {
     }
   }
 
-    Future<List<Author>> getAuthors() async {
+  Future<List<Author>> getAuthors() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/Author/ListAll'));
       if (response.statusCode == 200) {
@@ -61,6 +63,24 @@ class ApiService {
         ];
       } else {
         throw Exception('Yazarlar yüklenemedi');
+      }
+    } catch (e) {
+      throw Exception('Hata: $e');
+    }
+  }
+
+  Future<List<User>> getUsers() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/User/ListAll'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final List<dynamic> jsonList = responseData['data'] ?? [];
+        
+        List<User> users = jsonList.map((data) => User.fromJson(data)).toList();
+
+        return [ User(id: 0, name: '', surname: '', username: '' , email: '', recordDate: DateTime.now()), ...users];
+      } else {
+        throw Exception('Kullanıcılar yüklenemedi');
       }
     } catch (e) {
       throw Exception('Hata: $e');

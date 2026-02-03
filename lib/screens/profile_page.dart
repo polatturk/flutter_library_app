@@ -9,7 +9,7 @@ class ProfilePage extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.only(top: 60, bottom: 30), // Çentik için üstten boşluk
+            padding: const EdgeInsets.only(top: 60, bottom: 30), 
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Colors.indigo,

@@ -5,6 +5,7 @@ import '../providers/data_provider.dart';
 import '../models/book_model.dart';
 import '../models/category_model.dart';
 import '../models/author_model.dart';
+import 'book_detail_page.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -151,7 +152,7 @@ class _LibraryPageState extends State<LibraryPage> with AutomaticKeepAliveClient
     );
   }
 
-  Widget _buildBookCard(Book book, String authorName) {
+    Widget _buildBookCard(Book book, String authorName) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -161,7 +162,15 @@ class _LibraryPageState extends State<LibraryPage> with AutomaticKeepAliveClient
         subtitle: Text(authorName),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () {
-          // Detay sayfasına book nesnesini göndererek gidebilirsin
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookDetailPage(
+                book: book,
+                authorName: authorName,
+              ),
+            ),
+          );
         },
       ),
     );

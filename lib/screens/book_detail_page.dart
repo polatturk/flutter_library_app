@@ -23,12 +23,11 @@ class BookDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Üst Kısım: İkon ve Başlık
             Center(
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.indigo.withOpacity(0.1),
+                  color: Colors.indigo.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -57,14 +56,16 @@ class BookDetailPage extends StatelessWidget {
             ),
             const Divider(height: 40),
 
-            // Row(
-            //   children: [
-            //     _buildInfoChip(Icons.calendar_today, 
-            //       "${book.recordDate.day}/${book.recordDate.month}/${book.recordDate.year}"),
-            //     const SizedBox(width: 12),
-            //     _buildInfoChip(Icons.category_outlined, "ID: ${book.categoryId}"),
-            //   ],
-            // ),
+            Row(
+              children: [
+                _buildInfoChip(Icons.calendar_today, 
+                  "${book.recordDate.day}/${book.recordDate.month}/${book.recordDate.year}"),
+                const SizedBox(width: 12),
+                _buildInfoChip(Icons.auto_stories,"${book.countOfPage} Sayfa",),
+                const SizedBox(width: 12),
+                _buildInfoChip(Icons.category_outlined, "ID: ${book.categoryId}"),
+              ],
+            ),
             const SizedBox(height: 24),
 
             const Text(

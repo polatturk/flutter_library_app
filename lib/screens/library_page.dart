@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../services/api_service.dart';
+import '../providers/data_provider.dart'; 
 import '../models/book_model.dart';
 import '../models/category_model.dart';
+import '../models/author_model.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -12,27 +13,35 @@ class LibraryPage extends StatefulWidget {
   State<LibraryPage> createState() => _LibraryPageState();
 }
 
-class _LibraryPageState extends State<LibraryPage> {
-  final ApiService apiService = ApiService();
-  
-  // Late hatasını önlemek için Future'ları burada tanımlıyoruz
-  late Future<List<Category>> _categoriesFuture;
-  late Future<List<Book>> _booksFuture;
-
+class _LibraryPageState extends State<LibraryPage> with AutomaticKeepAliveClientMixin {
   Category? _selectedCategory;
+
+  @override
+  bool get wantKeepAlive => true; 
 
   @override
   void initState() {
     super.initState();
-    // Verileri initState içinde sadece BİR KEZ çekiyoruz. 
-    // Bu sayede 503 hatasının (aşırı istek) önüne geçiyoruz.
-    _categoriesFuture = apiService.getCategories();
-    _booksFuture = apiService.getBooks();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DataProvider>().loadLibraryData();
+    });
+  }
+
+  String _getAuthorNameById(List<Author> authors, int authorId) {
+    try {
+      final author = authors.firstWhere((a) => a.id == authorId);
+      return "${author.name} ${author.surname}";
+    } catch (e) {
+      return "Bilinmeyen Yazar";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // KeepAlive için gerekli
+    
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final dataProvider = context.watch<DataProvider>(); // Verileri buradan izliyoruz
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
     return Scaffold(
@@ -47,112 +56,113 @@ class _LibraryPageState extends State<LibraryPage> {
           const SizedBox(width: 10),
         ],
       ),
-      body: Column(
-        children: [
-          // --- Kategori Listesi Bölümü ---
-          SizedBox(
-            height: 70,
-            child: FutureBuilder<List<Category>>(
-              future: _categoriesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: LinearProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return const Center(child: Text("Kategoriler alınamadı"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const SizedBox();
-                }
+      body: _buildBody(dataProvider, isDarkMode),
+    );
+  }
 
-                final categories = snapshot.data!;
-                // Varsayılan olarak ilk kategoriyi (Tümü) seçiyoruz
-                _selectedCategory ??= categories.first;
+  Widget _buildBody(DataProvider dataProvider, bool isDarkMode) {
+    if (dataProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final bool isSelected = _selectedCategory?.id == category.id;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(category.name),
-                        selected: isSelected,
-                        onSelected: (bool selected) {
-                          setState(() {
-                            // Sadece seçili kategoriyi güncelliyoruz, 
-                            // API'ye tekrar istek ATMIYORUZ.
-                            _selectedCategory = category;
-                          });
-                        },
-                        checkmarkColor: Colors.indigo,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Colors.indigo
-                              : (isDarkMode ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+    if (dataProvider.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(dataProvider.error!),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => dataProvider.loadLibraryData(),
+              child: const Text("Tekrar Dene"),
             ),
-          ),
+          ],
+        ),
+      );
+    }
 
-          // --- Kitap Listesi Bölümü ---
-          Expanded(
-            child: FutureBuilder<List<Book>>(
-              future: _booksFuture, // Hafızadaki kitap listesini kullanıyoruz
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Hata: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Kitap bulunamadı.'));
-                }
+    final allBooks = dataProvider.books;
+    final allAuthors = dataProvider.authors;
+    final allCategories = dataProvider.categories;
 
-                // Filtreleme Mantığı: Veri zaten snapshot'ta var, 
-                // biz sadece arayüzde hangilerini göstereceğimizi seçiyoruz.
-                final allBooks = snapshot.data!;
-                final filteredBooks = (_selectedCategory == null || _selectedCategory!.id == 0)
-                    ? allBooks
-                    : allBooks.where((b) => b.categoryId == _selectedCategory!.id).toList();
+    final filteredBooks = allBooks.where((book) {
+      return (_selectedCategory == null || _selectedCategory!.id == 0) 
+          ? true 
+          : book.categoryId == _selectedCategory!.id;
+    }).toList();
 
-                if (filteredBooks.isEmpty) {
-                  return const Center(child: Text('Bu kategoride henüz kitap yok.'));
-                }
-
-                return ListView.separated(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("Kategoriler"),
+        _buildCategoryList(allCategories),
+        const Divider(height: 1),
+        Expanded(
+          child: filteredBooks.isEmpty
+              ? const Center(child: Text('Bu kategoride henüz kitap yok.'))
+              : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filteredBooks.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final book = filteredBooks[index];
-                    return Card(
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: const Icon(Icons.menu_book, color: Colors.indigo),
-                        title: Text(book.title, style: const TextStyle(fontWeight: FontWeight.bold)), 
-                        subtitle: Text(book.author),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                        onTap: () {
-                          // Kitap detay sayfasına gitme kodu buraya gelecek
-                        },
-                      ),
-                    );
+                    final authorName = _getAuthorNameById(allAuthors, book.authorId);
+                    return _buildBookCard(book, authorName);
                   },
-                );
+                ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, top: 10, bottom: 4),
+      child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+    );
+  }
+
+  Widget _buildCategoryList(List<Category> categories) {
+    if (categories.isEmpty) return const SizedBox();
+    _selectedCategory ??= categories.first;
+
+    return SizedBox(
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final isSelected = _selectedCategory?.id == category.id;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(category.name),
+              selected: isSelected,
+              onSelected: (val) {
+                if (val) setState(() => _selectedCategory = category);
               },
             ),
-          ),
-        ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBookCard(Book book, String authorName) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: const Icon(Icons.menu_book, color: Colors.indigo),
+        title: Text(book.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(authorName),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+        onTap: () {
+          // Detay sayfasına book nesnesini göndererek gidebilirsin
+        },
       ),
     );
   }

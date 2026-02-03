@@ -5,14 +5,17 @@ import 'screens/library_page.dart';
 import 'screens/search_page.dart';
 import 'screens/profile_page.dart';
 import 'providers/theme_provider.dart'; 
-
+import 'providers/data_provider.dart'; 
 
 void main() {
   runApp(
     DevicePreview(
       enabled: true,
-      builder: (context) => ChangeNotifierProvider(
-        create: (context) => ThemeProvider(),
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          ChangeNotifierProvider(create: (context) => DataProvider()),
+        ],
         child: const MyApp(),
       ),
     ),
@@ -31,7 +34,6 @@ class MyApp extends StatelessWidget {
       builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
       
-      // TEMA AYARLARI
       themeMode: themeProvider.themeMode, 
       theme: ThemeData(
         useMaterial3: true,

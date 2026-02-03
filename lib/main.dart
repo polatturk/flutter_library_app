@@ -1,11 +1,13 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
+import 'package:library_app/models/author_model.dart';
 import 'package:provider/provider.dart'; 
 import 'screens/library_page.dart';
 import 'screens/search_page.dart';
 import 'screens/profile_page.dart';
 import 'providers/theme_provider.dart'; 
 import 'providers/data_provider.dart'; 
+import 'screens/author_page.dart';
 
 void main() {
   runApp(
@@ -64,6 +66,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     const LibraryPage(),
+    const AuthorPage(),
     const SearchPage(),
     const ProfilePage(),
   ];
@@ -77,6 +80,7 @@ class _MainScreenState extends State<MainScreen> {
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Kitaplık'),
+          NavigationDestination(icon: Icon(Icons.edit_note), label: 'Yazarlar'),
           NavigationDestination(icon: Icon(Icons.search), label: 'Ara'),
           NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),
         ],

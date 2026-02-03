@@ -42,7 +42,7 @@ class _LibraryPageState extends State<LibraryPage> with AutomaticKeepAliveClient
     super.build(context); // KeepAlive için gerekli
     
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final dataProvider = context.watch<DataProvider>(); // Verileri buradan izliyoruz
+    final dataProvider = context.watch<DataProvider>(); 
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
     return Scaffold(

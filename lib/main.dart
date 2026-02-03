@@ -74,7 +74,6 @@ class _MainScreenState extends State<MainScreen> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
-          // İkonu isteğin üzerine sade 'book' yaptık
           NavigationDestination(icon: Icon(Icons.menu_book), label: 'Kitaplık'),
           NavigationDestination(icon: Icon(Icons.search), label: 'Ara'),
           NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),

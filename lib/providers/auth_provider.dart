@@ -4,37 +4,53 @@ import '../services/api_service.dart';
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   String? _token;
+  String? _name;
+  String? _surname;
+  String? _username;
+  String? _email;
   bool _isLoading = false;
 
   bool get isAuthenticated => _token != null;
   bool get isLoading => _isLoading;
+  String get fullName => "${_name ?? ''} ${_surname ?? ''}".trim();
+  String get userEmail => _email ?? "";
+  String get userNick => _username ?? "";
 
   Future<String?> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // API'ye isteği gönderiyoruz
       final result = await _apiService.login(email, password);
 
       if (result['isSuccess'] == true) {
-        _token = result['data']; // API'den gelen JWT Token
+        _token = result['data']; // JWT Token burada
+        
+        var userData = result['user']; 
+        if (userData != null) {
+          _name = userData['name'];         
+          _surname = userData['surname'];   
+          _username = userData['username']; 
+          _email = userData['email'];     
+        }
+
         _isLoading = false;
         notifyListeners();
-        return null; // Başarılıysa hata mesajı boş döner
+        return null; 
       } else {
         _isLoading = false;
         notifyListeners();
-        return result['message'] ?? "Giriş başarısız."; // Backend mesajını göster
+        return result['message'] ?? "Giriş başarısız.";
       }
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return "Bağlantı hatası: Sunucuya ulaşılamıyor.";
+      return "Bağlantı hatası: $e";
     }
   }
 
-  Future<String?> register({
+  // Kayıt Metodu
+  Future<String?> create({
     required String name,
     required String surname,
     required String username,
@@ -45,7 +61,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _apiService.register(name, surname, username, email, password);
+      final result = await _apiService.create(name, surname, username, email, password);
 
       if (result['isSuccess'] == true) {
         _isLoading = false;
@@ -63,8 +79,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // Çıkış Metodu
   void logout() {
     _token = null;
+    _name = null;
+    _surname = null;
+    _username = null;
+    _email = null;
     notifyListeners();
   }
 }

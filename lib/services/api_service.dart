@@ -119,7 +119,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> register(
+  Future<Map<String, dynamic>> create(
     String name, String surname, String username, String email, String password) async {
     try {
       final response = await http.post(

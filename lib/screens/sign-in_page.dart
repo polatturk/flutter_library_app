@@ -32,7 +32,7 @@ class _AuthPageState extends State<AuthPage> {
         _passwordController.text.trim(),
       );
     } else {
-      errorMessage = await auth.register(
+      errorMessage = await auth.create(
         name: _nameController.text.trim(),
         surname: _surnameController.text.trim(),
         username: _usernameController.text.trim(),

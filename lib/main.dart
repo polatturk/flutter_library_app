@@ -7,7 +7,9 @@ import 'screens/search_page.dart';
 import 'screens/profile_page.dart';
 import 'providers/theme_provider.dart'; 
 import 'providers/data_provider.dart'; 
+import 'providers/auth_provider.dart';
 import 'screens/author_page.dart';
+import 'screens/sign-in_page.dart';
 
 void main() {
   runApp(
@@ -17,6 +19,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (context) => ThemeProvider()),
           ChangeNotifierProvider(create: (context) => DataProvider()),
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
         ],
         child: const MyApp(),
       ),
@@ -49,7 +52,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF121212),
       ),
       
-      home: const MainScreen(),
+      home: context.watch<AuthProvider>().isAuthenticated ? const MainScreen() : const AuthPage(),
     );
   }
 }

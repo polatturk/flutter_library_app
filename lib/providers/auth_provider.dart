@@ -1,32 +1,68 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
+  final ApiService _apiService = ApiService();
   String? _token;
   bool _isLoading = false;
 
   bool get isAuthenticated => _token != null;
   bool get isLoading => _isLoading;
 
-  // Giriş Metodu (ApiService ile bağlanacak)
-  Future<bool> login(String email, String password) async {
+  Future<String?> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Burada ApiService.login() çağrılacak. Şimdilik simüle ediyoruz:
-      await Future.delayed(const Duration(seconds: 2));
-      _token = "fake-jwt-token"; // API'den gelen token buraya atanacak
-      _isLoading = false;
-      notifyListeners();
-      return true;
+      // API'ye isteği gönderiyoruz
+      final result = await _apiService.login(email, password);
+
+      if (result['isSuccess'] == true) {
+        _token = result['data']; // API'den gelen JWT Token
+        _isLoading = false;
+        notifyListeners();
+        return null; // Başarılıysa hata mesajı boş döner
+      } else {
+        _isLoading = false;
+        notifyListeners();
+        return result['message'] ?? "Giriş başarısız."; // Backend mesajını göster
+      }
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return false;
+      return "Bağlantı hatası: Sunucuya ulaşılamıyor.";
     }
   }
 
-  // Çıkış Metodu
+  Future<String?> register({
+    required String name,
+    required String surname,
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await _apiService.register(name, surname, username, email, password);
+
+      if (result['isSuccess'] == true) {
+        _isLoading = false;
+        notifyListeners();
+        return null;
+      } else {
+        _isLoading = false;
+        notifyListeners();
+        return result['message'] ?? "Kayıt işlemi başarısız.";
+      }
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return "Bağlantı hatası: Kayıt yapılamadı.";
+    }
+  }
+
   void logout() {
     _token = null;
     notifyListeners();

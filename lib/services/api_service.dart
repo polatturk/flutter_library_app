@@ -10,6 +10,19 @@ import '../models/user_model.dart';
 class ApiService {
   static const String baseUrl = 'https://booksapi.polatturkk.com.tr/api';
 
+  Future<Map<String, dynamic>> processResponse(http.Response response) async {
+    final contentType = response.headers['content-type'];
+
+    if (contentType != null && contentType.contains('application/json')) {
+      return json.decode(response.body);
+    } else {
+      return {
+        'isSuccess': false,
+        'message': response.body.isEmpty ? "Bir hata oluştu (Kod: ${response.statusCode})" : response.body
+      };
+    }
+  }
+  
   Future<List<Book>> getBooks() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/Book/ListAll'));
@@ -84,6 +97,46 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Hata: $e');
+    }
+  }
+
+
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/User/Login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': "", // UI'da istemiyoruz ama API beklediği için boş gönderiyoruz
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      return await processResponse(response);
+    } catch (e) {
+    return {'isSuccess': false, 'message': 'Bağlantı hatası: Sunucuya ulaşılamıyor.'};  
+    }
+  }
+
+  Future<Map<String, dynamic>> register(
+    String name, String surname, String username, String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/User/Create'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+        'name': name,
+        'surname': surname,
+        'username': username,
+        'email': email,
+        'password': password,
+        }),
+      );
+
+      return await processResponse(response);
+    } catch (e) {
+      return {'isSuccess': false, 'message': 'Bağlantı hatası: Kayıt yapılamadı.'};
     }
   }
 }

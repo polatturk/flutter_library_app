@@ -22,21 +22,19 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final result = await _apiService.login(email, password);
-
+      
       if (result['isSuccess'] == true) {
-        _token = result['data']; // JWT Token burada
+        final payload = result['data']; 
         
-        var userData = result['user']; 
-        if (userData != null) {
-          _name = userData['name'];         
-          _surname = userData['surname'];   
-          _username = userData['username']; 
-          _email = userData['email'];     
-        }
+        _token = payload['token'];      
+        _name = payload['name'];        
+        _surname = payload['surname'];  
+        _username = payload['username'];
+        _email = payload['email'];     
 
         _isLoading = false;
-        notifyListeners();
-        return null; 
+        notifyListeners(); 
+        return null;
       } else {
         _isLoading = false;
         notifyListeners();
@@ -45,7 +43,8 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return "Bağlantı hatası: $e";
+      debugPrint("Hata Detayı: $e");
+      return "Veri işleme hatası: $e";
     }
   }
 
